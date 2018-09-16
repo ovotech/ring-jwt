@@ -7,4 +7,5 @@
   [url key-id]
   (-> (URL. url)
       (UrlJwkProvider.)
-      (.get key-id)))
+      (.get key-id)
+      (.getPublicKey)))
