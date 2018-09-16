@@ -4,7 +4,8 @@
             [clojure.test :refer :all]
             [ring.middleware.jwt-test-utils :as util]
             [ring.middleware.jwt :refer [wrap-jwt]])
-  (:import (clojure.lang ExceptionInfo)))
+  (:import (clojure.lang ExceptionInfo)
+           (java.util UUID)))
 
 (def ^:private dummy-handler (constantly identity))
 
@@ -141,4 +142,17 @@
   (deftest extra-unsupported-option-does-not-cause-error
     (wrap-jwt (dummy-handler) {:alg    :HS256
                                :secret "somesecret"
-                               :bollox "whatever"})))
+                               :bollox "whatever"}))
+
+  (deftest support-jwk-cache-option
+    (wrap-jwt (dummy-handler) {:alg          :RS256
+                               :jwk-endpoint "https://my/jwk"
+                               :key-id       (str (UUID/randomUUID))
+                               :cache        true}))
+
+  (deftest invalid-cache-option-causes-error
+    (is (thrown-with-msg? ExceptionInfo #"Invalid options."
+                          (wrap-jwt (dummy-handler) {:alg          :RS256
+                                                     :jwk-endpoint "https://my/jwk"
+                                                     :key-id       (str (UUID/randomUUID))
+                                                     :cache        100})))))

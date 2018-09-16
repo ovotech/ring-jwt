@@ -36,6 +36,27 @@
                                   :key-id       key-id})
              payload)))))
 
+(deftest cache-jwks
+  (let [payload      {:field1 "whatever" :field2 "something else"}
+        {:keys [private-key public-key]} (util/generate-key-pair alg)
+        token        (util/encode-token payload {:alg       alg
+                                                 :private-key private-key})
+        key-id       (str (UUID/randomUUID))
+        jwk-endpoint "https://my/jwk"
+        get-jwk-call-count (atom 0)
+        opts {:alg          alg
+              :jwk-endpoint jwk-endpoint
+              :key-id       key-id
+              :cache        true}]
+
+    (with-redefs [jwk/get-jwk (fn [u k]
+                                (when (and (= u jwk-endpoint) (= k key-id))
+                                  (swap! get-jwk-call-count #(+ 1 %))
+                                  public-key))]
+      (is (= (token/decode token opts) payload))
+      (is (= (token/decode token opts) payload))
+      (is (= @get-jwk-call-count 1)))))
+
 (deftest decoding-token-signed-with-non-matching-key-causes-error
   (let [{:keys [private-key]} (util/generate-key-pair alg)
         {:keys [public-key]} (util/generate-key-pair alg)

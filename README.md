@@ -43,10 +43,12 @@ supported for the purposes of JWS:
 | Algorithm                      | Options                                       |
 | ------------------------------ | --------------------------------------------- |
 | RSASSA-PKCS-v1_5 using SHA-256 | `{:alg :RS256 :public-key public-key}` <sup>[1]</sup> |
-|                                | `{:alg :RS256 :jwk-endpoint "https://your/jwk/endpoint :key-id "key-id"}` | 
+|                                | `{:alg :RS256 :jwk-endpoint "https://your/jwk/endpoint :key-id "key-id" :cache true}` <sup>[2]</sup> | 
 | HMAC using SHA-256             | `{:alg :HS256 :public-key "your-secret"}`     |
 
 [1] `public-key` is of type `java.security.PublicKey`.
+
+[2] when `cache` is set to true, jwks are cached using lru-cache. Cache threshold is equal to 10.
 
 Additionally, the following optional options are supported:
 
