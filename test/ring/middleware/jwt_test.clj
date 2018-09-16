@@ -4,7 +4,8 @@
             [clojure.test :refer :all]
             [ring.middleware.jwt-test-utils :as util]
             [ring.middleware.jwt :refer [wrap-jwt]])
-  (:import (clojure.lang ExceptionInfo)))
+  (:import (clojure.lang ExceptionInfo)
+           (java.util UUID)))
 
 (def ^:private dummy-handler (constantly identity))
 
@@ -141,4 +142,9 @@
   (deftest extra-unsupported-option-does-not-cause-error
     (wrap-jwt (dummy-handler) {:alg    :HS256
                                :secret "somesecret"
-                               :bollox "whatever"})))
+                               :bollox "whatever"}))
+
+  (deftest http-protocol-in-jwk-endpoint-does-not-cause-error
+    (wrap-jwt (dummy-handler) {:alg          :RS256
+                               :jwk-endpoint "http://my/jwk"
+                               :key-id       (str (UUID/randomUUID))})))

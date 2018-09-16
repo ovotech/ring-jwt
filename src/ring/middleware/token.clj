@@ -36,7 +36,7 @@
                             #(contains? #{:HS256} (:alg %))))
 
 (s/def ::public-key #(instance? PublicKey %))
-(s/def ::jwk-endpoint (s/and string? #(re-matches #"(?i)^https://.+$" %)))
+(s/def ::jwk-endpoint (s/and string? #(re-matches #"(?i)^https?://.+$" %)))
 (s/def ::key-id (s/and string? (complement clojure.string/blank?)))
 (s/def ::public-key-opts (s/and #(contains? #{:RS256} (:alg %))
                                 (s/or :key (s/keys :req-un [::alg ::public-key])
