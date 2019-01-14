@@ -12,8 +12,8 @@
            (re-find #"(?i)^Bearer (.+)$")
            (last)))
 
-(s/def ::alg-opts (s/and (s/keys :req-in [::token/alg]
-                                 :opt-un [::token/leeway-seconds ::token/issuer])
+(s/def ::alg-opts (s/and (s/keys :req-un [::token/alg]
+                                 :opt-un [::token/leeway-seconds ::token/issuer ::token/finder])
                          (s/or :secret-opts ::token/secret-opts
                                :public-key-opts ::token/public-key-opts)))
 
@@ -25,13 +25,13 @@
   a 401 response is produced.
 
   If the JWT token does not exist, an empty :claims map is added to the incoming request."
-  [handler opts]
+  [handler {:keys [finder] :or {finder find-token} :as opts}]
   (when (not (s/valid? ::alg-opts opts))
     (throw (ex-info "Invalid options." (s/explain-data ::alg-opts opts))))
 
   (fn [req]
     (try
-      (if-let [token (find-token req)]
+      (if-let [token (finder req)]
         (->> (token/decode token opts)
              (assoc req :claims)
              (handler))

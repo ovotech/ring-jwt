@@ -182,6 +182,24 @@
                              :jwk-endpoint "http://my/jwk"
                              :key-id       (str (UUID/randomUUID))}))
 
+(deftest token-can-be-found-with-finder
+  (let [{:keys [private-key]} (util/generate-key-pair :RS256)
+        claims  {:a 1 :b 2 :iss issuer}
+        secret          (util/generate-hmac-secret)
+        token           (util/encode-token claims {:alg :HS256
+                                                   :secret secret})
+        handler (wrap-jwt (dummy-handler) {:alg    :HS256
+                                           :finder (fn [req] (get-in req [:headers "x-authorization"]))
+                                           :secret secret})
+        req     (-> (build-request claims {:alg    :HS256
+                                           :secret secret})
+                    (assoc-in [:headers "x-authorization"] token)
+                    (update-in [:headers] dissoc "Authorization" )
+                    )
+        res (handler req)]
+    (is (= claims (:claims res)))
+    ))
+
 (testing "invalid options"
   (deftest missing-option-causes-error
     (is (thrown-with-msg? ExceptionInfo #"Invalid options."
@@ -198,7 +216,23 @@
                           (wrap-jwt (dummy-handler) {:alg    :RS256
                                                      :secret "whatever"}))))
 
+  (deftest key-fn-not-a-function
+    (is (thrown-with-msg? ExceptionInfo #"Invalid options."
+                          (wrap-jwt (dummy-handler) {:alg    :RS256
+                                                     :key-fn "not a fn"
+                                                     })))
+    )
+
+  (deftest finder-fn-not-a-function
+    (is (thrown-with-msg? ExceptionInfo #"Invalid options."
+                          (wrap-jwt (dummy-handler) {:alg    :RS256
+                                                     :finder "not a fn"
+                                                     })))
+    )
+
   (deftest extra-unsupported-option-does-not-cause-error
     (wrap-jwt (dummy-handler) {:alg    :HS256
                                :secret "somesecret"
-                               :bollox "whatever"})))
+                               :bollox "whatever"}))
+
+  )

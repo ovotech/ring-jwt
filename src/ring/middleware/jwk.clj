@@ -15,3 +15,15 @@
             (.getPublicKey)))
       (getPrivateKey [_] nil)
       (getPrivateKeyId [_] nil))))
+
+(defn ^RSAKeyProvider simple-jwk-provider
+  "Creates a provider that gets a public key from the kid attribut by calling a user provided fn"
+  [key-fn]
+  (reify RSAKeyProvider
+    (getPublicKeyById [_, key-id]
+      (key-fn key-id)
+      )
+    (getPrivateKey [_] nil)
+    (getPrivateKeyId [_] nil)
+    )
+  )

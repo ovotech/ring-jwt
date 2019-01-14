@@ -44,20 +44,31 @@ supported for the purposes of JWS:
 | ------------------------------ | --------------------------------------------- |
 | RSASSA-PKCS-v1_5 using SHA-256 | `{:alg :RS256 :public-key public-key}` <sup>[1]</sup> |
 |                                | `{:alg :RS256 :jwk-endpoint "https://your/jwk/endpoint"}` | 
+|                                | `{:alg :RS256 :key-fn kid->pk }` <sup>[2]</sup> |
 | HMAC using SHA-256             | `{:alg :HS256 :public-key "your-secret"}`     |
 
 [1] `public-key` is of type `java.security.PublicKey`.
+
+[2] `kid->pk` is a user-provided fn that takes a key id (^String from the "kid" header in the JWT) and returns a `java.security.PublicKey`.
 
 Additionally, the following optional options are supported:
 
 * `leeway-seconds`: The number of seconds leeway to give when verifying the expiry/active from claims
 of the token (i.e. the `exp` and `nbf` claims).
 * `issuer`: The issuer of the token, if this does not match the issuer on a token a `401` will be returned.
+* `finder`: A fn taking a ring request and returning the JWT to decode
 
 ### Finding the token on the request
-Currently the library looks in order from the following locations:
+
+By default the library looks in order from the following locations:
 
 1. `Authorization` header bearer token (i.e. an `Authorization` HTTP header of the form "Bearer TOKEN")
+
+If the token is in a different location, use the `finder` option to extract the token from the [Ring](https://github.com/ring-clojure/ring/blob/master/SPEC) request.
+Example: 
+```
+(fn [req] (get-in req [:headers "x-authorization"]))
+```
 
 ## Useful links
 

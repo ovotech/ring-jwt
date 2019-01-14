@@ -45,6 +45,21 @@
                                   :jwk-endpoint jwk-endpoint})
              payload)))))
 
+(deftest can-decode-token-based-on-key-fn
+  (let [payload      {:field1 "whatever" :field2 "something else"}
+        {:keys [private-key public-key]} (util/generate-key-pair alg)
+        key-id       (str (UUID/randomUUID))
+        token        (util/encode-token payload {:alg         alg
+                                                 :private-key private-key
+                                                 :public-key  public-key
+                                                 :key-id      key-id})
+        key-fn (fn [_] public-key)]
+
+    (is (= (token/decode token {:alg    alg
+                                :key-fn key-fn})
+           payload)))
+  )
+
 (deftest decoding-token-signed-with-non-matching-key-causes-error
   (let [{:keys [private-key]} (util/generate-key-pair alg)
         {:keys [public-key]} (util/generate-key-pair alg)

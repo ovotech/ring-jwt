@@ -32,6 +32,7 @@
 (s/def ::alg #{:RS256 :HS256})
 (s/def ::issuer (s/and string? (complement clojure.string/blank?)))
 (s/def ::leeway-seconds nat-int?)
+(s/def ::finder fn?)
 
 (s/def ::secret (s/and string? (complement clojure.string/blank?)))
 (s/def ::secret-opts (s/and (s/keys :req-un [::alg ::secret])
@@ -39,9 +40,11 @@
 
 (s/def ::public-key #(instance? PublicKey %))
 (s/def ::jwk-endpoint (s/and string? #(re-matches #"(?i)^https?://.+$" %)))
+(s/def ::key-fn fn?)
 (s/def ::public-key-opts (s/and #(contains? #{:RS256} (:alg %))
                                 (s/or :key (s/keys :req-un [::alg ::public-key])
-                                      :url (s/keys :req-un [::alg ::jwk-endpoint]))))
+                                      :url (s/keys :req-un [::alg ::jwk-endpoint])
+                                      :key-fn (s/keys :req-un [::alg ::key-fn]))))
 
 (defmulti decode
           "Decodes and verifies the signature of the given JWT token. The decoded claims from the token are returned."
@@ -51,13 +54,15 @@
   (throw (JWTDecodeException. "Could not parse algorithm.")))
 
 (defmethod decode :RS256
-  [token {:keys [public-key jwk-endpoint] :as opts}]
+  [token {:keys [public-key jwk-endpoint key-fn] :as opts}]
   {:pre [(s/valid? ::public-key-opts opts)]}
 
   (let [[public-key-type _] (s/conform ::public-key-opts opts)]
     (-> (Algorithm/RSA256 (case public-key-type
                             :url (jwk/jwk-provider jwk-endpoint)
-                            :key public-key))
+                            :key public-key
+                            :key-fn (jwk/simple-jwk-provider key-fn)
+                            ))
         (decode-token* token opts))))
 
 (defmethod decode :HS256
