@@ -19,7 +19,7 @@
                          (s/or :secret-opts ::token/secret-opts
                                :public-key-opts ::token/public-key-opts)))
 (s/def ::issuers (s/map-of ::token/issuer ::alg-opts))
-(s/def ::find-token-fn fn?)
+(s/def ::find-token-fn ifn?)
 (s/def ::reject-missing-token? boolean?)
 
 (s/def ::opts (s/keys :req-un [::issuers]
