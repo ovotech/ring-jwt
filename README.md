@@ -1,4 +1,7 @@
 # ring-jwt
+
+> **IMPORTANT**: Thanks to everyone who has made use of and fed back on this project over the years. Unfortunately, this repo is now going into maintenance mode - no new issues or PRs will be accepted. However, the good news is that the maintainer of the project, [kelveden](https://github.com/kelveden), will continue the project under [this fork](https://github.com/kelveden/ring-jwt) - please consider this fork as the canonical source for the project going forward.
+
 [![Clojars Project](https://img.shields.io/clojars/v/ovotech/ring-jwt.svg)](https://clojars.org/ovotech/ring-jwt)
 
 [Ring](https://github.com/ring-clojure/ring) middleware for parsing, decoding and verifying
